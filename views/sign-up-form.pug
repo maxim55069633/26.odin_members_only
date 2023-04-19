@@ -1,0 +1,39 @@
+extends layout
+
+block content
+  h1 Sign up
+
+  form#sign_up_form(method='POST' action='/sign-up')
+    div.form-group
+      label(for='first_name') First Name:
+      input#first_name.form-control(type='text'  name='first_name' required='true' )
+      label(for='family_name') Family Name:
+      input#family_name.form-control(type='text' name='family_name' required='true' )
+    div.form-group
+      label(for='username') E-mail:
+      input#email.form-control(type='email' name='username')
+   
+      label(for='password') Password:
+      input#password.form-control(type='password' name='password' required='true')
+      label(for='confirmPassword') Confirm Password:
+      input#confirmPassword.form-control(type='password' name='confirmPassword' required='true')
+    button.btn.btn-primary(type='submit') Submit
+  
+  // check if the passwords entered two times are the same 
+  script.
+    const pwd1=document.getElementById('password');
+    const pwd2=document.getElementById('confirmPassword');
+    const form=document.getElementById("sign_up_form");
+    function check_password_same(e){
+        if(pwd1.value !== pwd2.value)
+            {
+              alert("The password you enter this time doesn't match the previous one.");
+              e.preventDefault();
+            }
+    }
+    form.addEventListener('submit', check_password_same);
+
+  if errors
+    ul
+      for error in errors
+        li!= error.msg

@@ -1,0 +1,29 @@
+extends layout
+
+block content
+  h1 WELCOME to Anonymous Chatroom
+  h2 Message Board
+  
+  if user
+    ul
+      if user.membership
+        div.container
+          each message in messages
+            li    
+              .row
+                .col-3
+                  p #{message.user.name}
+                .col-6.text-end
+                  p #{message.date_formatted}
+              .row
+                .col
+                  p #{message.text}
+          else
+            li There are no messages. 
+      else
+        each message in messages
+          li #{message.text}
+        else
+          li There are no messages.
+  else 
+    p Please log in first.
