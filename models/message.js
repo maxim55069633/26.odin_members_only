@@ -9,7 +9,7 @@ const MessageSchema = new Schema({
 });
 
 MessageSchema.virtual("date_formatted").get(function () {
-  return DateTime.fromJSDate(this.timestamp).toFormat('hh:mm:ss -- MMMM dd, yyyy');
+  return DateTime.fromJSDate(this.timestamp).toFormat('MMMM dd, yyyy \'at\' hh:mm');
 });
 
 // Export model

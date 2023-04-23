@@ -2,45 +2,31 @@ extends layout
 
 block content
   if user
-    h1 WELCOME BACK
-      p #{user.name}
-    a(href="/log-out") LOG OUT
-    p message board with authors and dates
+    if (user.admin != true)
+      .card
+        .card-body.p-3
+        h5.card-title.text-center
+          | Your User Group is 
+          if (user.membership && user.admin)
+            | Admin 
+          else if (user.membership)
+            | Member 
+          else 
+            | Ordinary User
 
-    div.m-5
-      form(action=`${user.id}/message`, method="POST")
-        label(for="message") Message:
-        br
-        textarea(name="message", id="message", rows="5" cols="100" required="true")
-        br
-        button.m-2(type="submit") Send
+      if (user.membership == false)
+        form(method="post" action=`${user.id}/member`).bg-primary.p-3
+          .form-group.d-flex
+            input#member_code.form-control(type="text"  name="member_code" required='true' placeholder="Enter member code")
+            button.btn.btn-primary(type="submit").mx-2.bg-white.text-primary Submit
+      else if (user.admin == false)
+        form(method="post" action=`${user.id}/admin`).bg-success.p-3
+          .form-group.d-flex
+            input#admin_code.form-control(type="text"  name="admin_code" required='true' placeholder="Enter admin code")
+            button.btn.btn-primary(type="submit").mx-2.bg-white.text-success Submit  
 
-    div.container
-      div.row
-        div.col-md-8.offset-md-2
-          div#accordion
-            div.card.bg-primary.text-white
-              div.card-header
-                h5.mb-0
-                  button.text-white.btn.btn-link.collapsed(data-toggle='collapse', data-target='#collapseOne', aria-expanded='true', aria-controls='collapseOne')
-                    | Membership Status: #{user.membership}
-              div#collapseOne.collapse.show(aria-labelledby='headingOne', data-parent='#accordion')
-                div.card-body
-                  form(method="post" action=`${user.id}/member`)
-                    label(for="member_code") Enter member code below 
-                    |
-                    |
-                    input.m-2(type="text" name="member_code" id="member_code" required='true')
-                    button.m-2(type="submit") Confirm
-            div.card.bg-success.text-white
-              div.card-header
-                h5.mb-0
-                  button.text-white.btn.btn-link.collapsed(data-toggle='collapse', data-target='#collapseTwo', aria-expanded='false', aria-controls='collapseTwo')
-                    | Admin Status: #{user.admin}
-              div#collapseTwo.collapse(aria-labelledby='headingTwo', data-parent='#accordion')
-                div.card-body
-                  | Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed vitae fringilla massa, vitae blandit nunc. Sed auctor, orci at posuere elementum, nulla tellus interdum mi, sed bibendum sapien dolor sit amet dui. Maecenas id enim at purus congue accumsan.
+
 
   else 
-    p Please log in first
+    p.h3 Please log in first
     

@@ -50,7 +50,6 @@ passport.use(
         bcrypt.compare(password, user.password, (err, res) => {
           if (res) {
             console.log("successfully logged in.");
-            
 
             // passwords match! log user in
             return done(null, user);
@@ -84,24 +83,28 @@ app.use(passport.initialize());
 app.use(passport.session());
 app.use(express.urlencoded({ extended: false }));
 
-app.use(function(req, res, next) {
+app.use( function(req, res, next) {
   res.locals.currentUser = req.user;
+  console.log('Middleware function executed');
   next();
 });
 
-app.get("/", (req, res) => res.render("index"));
+app.get("/", (req, res) => res.render("index", {user: res.locals.currentUser}));
+
+app.get("/prompt", (req, res)=> res.render("prompt", {prompt: res.cookie.text}));
 
 app.get("/user/:id/", (req, res) => {
-  res.render("user", { user: req.user });
+  res.render("user", { user: res.locals.currentUser});
 });
 
-app.get("/user/:id/message", async (req, res) => {
+app.get("/user/:id/message", async (req, res, next) => {
   
+
+  // res.locals.currentUser.id
   const current_user = await User.findById(req.params.id).exec();
   try {
     const allMessages = await Message.find().populate("user").exec();
     res.render("message-board", { user: current_user, messages: allMessages });
-    // res.redirect(`/user/${req.params.id}/`);
   } catch (err) {
     next(err);
   }
@@ -119,7 +122,6 @@ app.post("/user/:id/message", [
   }
 
   const current_user = await  User.findById(req.params.id).exec();
-
   const message = new Message({
     text: req.body.message,
     user: current_user,
@@ -128,18 +130,34 @@ app.post("/user/:id/message", [
 
   try {
     await message.save();
-
-    const allMessages = await Message.find().exec();
-    res.render("message-board", { user: current_user, messages: allMessages });
-    // res.redirect(`/user/${req.params.id}/`);
+    // const allMessages = await Message.find().populate("user").exec();
+    res.redirect(`/user/${req.params.id}/message`);
   } catch (err) {
     next(err);
   }
+
  },
 ] );
 
+app.get("/user/:id/message/delete", (req, res, next)=>{
+  res.redirect(`/user/${req.params.id}/message`);
+});
+
+app.post("/user/:id/message/delete", (req,res, next)=>{
+
+  const message_ids_to_delete =  req.body.selectedItems;
+  Message.deleteMany( {_id:{$in: message_ids_to_delete} } ).then(
+    result=>{
+      res.redirect(`/user/${req.params.id}/message/delete`);
+    }
+  ).catch(err=>{
+    next(err);
+  });
+
+});
+
 app.get("/user/:id/member", (req, res)=>{
-  res.render("member", { user: res.locals.currentUser});
+  res.redirect(`/user/${res.locals.currentUser.id}`);
 });
 
 app.post("/user/:id/member", [
@@ -154,68 +172,126 @@ app.post("/user/:id/member", [
   }
 
   const right_member_code = (await Code.find({type: "member"}).exec())[0].value;
-  const current_user = await User.findById(req.params.id).exec();
+  const current_user = await User.findById(res.locals.currentUser.id).exec();
 
-  console.log("Outside the if statement");
-  console.log(req.body.member_code );
-  console.log(right_member_code);
-  console.log(req.body.member_code == right_member_code);
-
+  const modified_user = new User({
+    first_name: current_user.first_name,
+    family_name: current_user.family_name,
+    email: current_user.email,
+    password: current_user.password,
+    membership : true,
+    admin : current_user.admin,
+    _id: current_user.id, // This is required, or a new ID will be assigned!
+  });
 
   if(req.body.member_code == right_member_code ) {
 
-    console.log("Inside the if statement");
-    console.log(right_member_code);
-    
-    const modified_user = new User({
-      first_name: current_user.first_name,
-      family_name: current_user.family_name,
-      email: current_user.email,
-      password: current_user.password,
-      membership : true,
-      admin : current_user.admin,
-      _id: current_user.id, // This is required, or a new ID will be assigned!
-    });
-
-    
     try {
       await User.findByIdAndUpdate(current_user.id, modified_user, {});  
-      res.render("member", { user: current_user});
-      // res.redirect(`/user/${req.params.id}/`);
+      res.redirect(`/user/${modified_user._id}/member`);
     } catch (err) {
       next(err);
     }
   } else {
-    res.render("member");
+    res.redirect(`/user/${current_user._id}/member`);
   }
-  
  },
 ] )
 
-app.get("/sign-up", (req, res) => res.render("sign-up-form"));
+
+
+app.get("/user/:id/admin", (req, res)=>{
+  res.redirect(`/user/${res.locals.currentUser.id}`);
+});
+
+app.post("/user/:id/admin", [
+  body("admin_code", "Admin code required").trim().isLength({ min: 1 }).escape(),
+ // Process request after validation and sanitization.
+  async (req, res, next) => {
+
+  // Extract the validation errors from a request.
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return next(errors.array());
+  }
+
+  const right_admin_code = (await Code.find({type: "admin"}).exec())[0].value;
+  const current_user = await User.findById(res.locals.currentUser.id).exec();
+
+  const modified_user = new User({
+    first_name: current_user.first_name,
+    family_name: current_user.family_name,
+    email: current_user.email,
+    password: current_user.password,
+    membership : current_user.membership,
+    admin : true,
+    _id: current_user.id, // This is required, or a new ID will be assigned!
+  });
+
+  if(req.body.admin_code == right_admin_code ) {
+
+    try {
+      await User.findByIdAndUpdate(current_user.id, modified_user, {});  
+      res.redirect(`/user/${modified_user._id}/admin`);
+    } catch (err) {
+      next(err);
+    }
+  } else {
+    res.redirect(`/user/${current_user._id}/admin`);
+    }
+ },
+] )
+
+app.get("/sign-up", (req, res) => {
+  res.render("sign-up-form");
+});
+
 app.post("/sign-up", async (req, res, next) => {
   bcrypt.hash(req.body.password, 10, async (err, hashedPassword) => {
-    // if err, do something
     if (err) 
       return next(err);
-    // otherwise, store hashedPassword in DB
     else {
+
       try {
-        const user = new User({
-          first_name: req.body.first_name,
-          family_name: req.body.family_name,
-          // email: req.body.email,
-          email: req.body.username,
-          password: hashedPassword,
-          membership: false,
-          admin: false,
-        });
-        const result = await user.save();
-        res.redirect(`/user/${user.id}/`);
-  
-      } catch(err) {
+        const allUsers = await User.find().exec();
+        let i=0;
+        for(; i< allUsers.length; i++) {
+          if ( allUsers[i].email == req.body.username )
+            break;
+        }
+        if( i != allUsers.length)
+        // find the entered email that exists in the database
+          throw new Error('This email address has already been used by someone else. Please choose a different one.');
+        else {
+
+          const updated_user = new User({
+            first_name: req.body.first_name,
+            family_name: req.body.family_name,
+            // email: req.body.email,
+            email: req.body.username,
+            password: hashedPassword,
+            membership: false,
+            admin: false,
+          });
+
+          updated_user.save().then(
+            result=>  {
+            // Log in the user automatically after signing up
+              req.login(updated_user, function(err) {
+                if (err) { return next(err); }
+                return res.redirect(`/user/${updated_user.id}/`);
+              });
+
+            }
+          ).catch(err=>{
+            return next(err);
+          })
+          
+        }
+      } catch (err) {
         return next(err);
-      };
+      }
+      
     }
   });
   });
@@ -225,7 +301,6 @@ app.get("/log-in", (req, res) => res.render("log-in-form"));
 app.post(
   "/log-in",
   passport.authenticate("local", {
-    // successRedirect: `/`,
     failureRedirect: "/log-in"
   }),
   function (req, res) {

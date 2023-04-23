@@ -1,29 +1,50 @@
 extends layout
 
 block content
-  h1 WELCOME to Anonymous Chatroom
-  h2 Message Board
   
   if user
-    ul
       if user.membership
-        div.container
-          each message in messages
-            li    
-              .row
-                .col-3
-                  p #{message.user.name}
-                .col-6.text-end
-                  p #{message.date_formatted}
-              .row
-                .col
-                  p #{message.text}
+        div.container.bg-warning.p-3
+          if messages.length>0
+            
+            form(id='select_form' action=`/user/${user.id}/message/delete`  method="POST")
+              div.d-flex.flex-row.justify-content-center
+                if user.admin
+                  button.p-1.m-2(type="submit") delete selected items
+                else
+                  p.text-center Enter the admin code in the user's profile to gain the privilege to delete messages.
+              each message in messages
+                div.d-flex.align-items-center
+                  if user.admin
+                    input(type='checkbox', name='selectedItems', value=message.id)  
+                  div.w-100
+                    .card.m-3         
+                      .card-header
+                        div.d-flex.justify-content-between
+                          span.h5.card-title #{message.user.name}
+                          span.card-text.text-muted #{message.date_formatted}
+                      .card-body
+                        p.card-text #{message.text}
           else
-            li There are no messages. 
+            p There are no messages. 
       else
-        each message in messages
-          li #{message.text}
-        else
-          li There are no messages.
+        div.container     
+          p.text-center Enter the member code in the user's profile to check the date and author of each message.
+          if messages.length>0
+            each message in messages
+             div.w-100
+               .card.m-3
+                 .card-body
+                   p.card-text #{message.text}
+          else
+            p There are no messages.
+
+      .card.mx-auto.my-5
+        .card-body
+          form(action=`/user/${user.id}/message`, method="POST")
+            .form-group
+              label(for="message").h3 Leave your message here:
+              textarea.form-control(name="message", id="message", rows="3" cols="100", required="true")
+            button.btn.btn-primary.mt-1(type="submit") Post
   else 
-    p Please log in first.
+    p.h3 Please log in first.

@@ -1,5 +1,30 @@
 extends layout
 
 block content
-  h1 WELCOME to Anonymous Chatroom
-    
+    p.h5 Introduction: This is an exclusive clubhouse where members can write anonymous posts. Inside the clubhouse, members can see who the author of a post is, but outside they can only see the story and wonder who wrote it. 
+    div.d-flex.justify-content-center
+      p.h4 Different types of account:
+      ul
+        li Ordinary User: Make a post and view the message board  
+        li Member: Ordniary User + See the author and timestamp of a post
+        li Admin: Member + Delete messages
+    div.container
+      div.row
+        div.col-md-8.offset-md-2
+          div#accordion
+            div.card.bg-primary.text-white
+              div.card-header
+                h5.mb-0
+                  button.text-white.btn.btn-link.collapsed(data-toggle='collapse', data-target='#collapseOne', aria-expanded='true', aria-controls='collapseOne') What member code can I use?
+              div#collapseOne.collapse.show(aria-labelledby='headingOne', data-parent='#accordion')
+                div.card-body
+                  | member01
+
+            div.card.bg-success.text-white
+              div.card-header
+                h5.mb-0
+                  button.text-white.btn.btn-link.collapsed(data-toggle='collapse', data-target='#collapseTwo', aria-expanded='false', aria-controls='collapseTwo') What admin code can I use?
+              div#collapseTwo.collapse(aria-labelledby='headingTwo', data-parent='#accordion')
+                div.card-body
+                  | admin02
+

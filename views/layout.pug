@@ -9,4 +9,35 @@ html
     script(src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js", integrity="sha384-B4gt1jrGC7Jh4AgTPSdUtOBvfO8shuf57BaghqFfPlYxofvL8/KUEfYiJOMMV+rV", crossorigin="anonymous")
     link(rel='stylesheet', href='/stylesheets/style.css')
   body
-    block content
+    header
+      if !user
+        div.header-links.d-flex.align-items-center.justify-content-end
+          a(href="/log-in") Login
+            span.mr-4
+          a(href="/sign-up") Sign-Up
+      else 
+        div.header-links.d-flex.align-items-center.justify-content-end
+          span Welcome Back, #{user.name}
+            span.mr-4
+          a(href="/log-out") Log-Out
+    
+      h1.text-center Anonymous Message Board
+      
+      
+      nav
+        .navbar.navbar-expand-lg.justify-content-center
+          .navbar-nav.d-flex.flex-row
+            .nav-item.m-2.border.p-1
+              a.nav-link(href="/") Home
+            .nav-item.m-2.border.p-1
+              if user
+                a.nav-link(href=`/user/${user.id}/`) Profile
+              else 
+                a.nav-link(href=`/prompt/`) Profile    
+            .nav-item.m-2.border.p-1
+              if user
+                a.nav-link(href=`/user/${user.id}/message`) Message Board
+              else 
+                a.nav-link(href=`/prompt/`) Message Board    
+
+  block content
